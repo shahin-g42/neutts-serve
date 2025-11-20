@@ -147,6 +147,26 @@ class Settings(BaseSettings):
     )
     
     # Phonemizer configuration
+    phonemizer_language: str = Field(
+        default="en-us",
+        description="Language for phonemizer (e.g., en-us, en-gb, es, fr, de)",
+        env="PHONEMIZER_LANGUAGE"
+    )
+    enable_phonemization: bool = Field(
+        default=True,
+        description="Enable phonemization (set to False to pass text directly without phoneme conversion)",
+        env="ENABLE_PHONEMIZATION"
+    )
+    phonemizer_preserve_punctuation: bool = Field(
+        default=True,
+        description="Preserve punctuation in phonemization",
+        env="PHONEMIZER_PRESERVE_PUNCTUATION"
+    )
+    phonemizer_with_stress: bool = Field(
+        default=True,
+        description="Include stress markers in phonemization",
+        env="PHONEMIZER_WITH_STRESS"
+    )
     phonemizer_espeak_path: Optional[str] = Field(
         default=None,
         description="Path to espeak-ng binary (for macOS/custom installs)",

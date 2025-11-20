@@ -122,15 +122,20 @@ class NeuTTSAirWrapper:
     
     def _load_phonemizer(self):
         """Load the phonemizer backend for text-to-phoneme conversion."""
-        app_logger.info("Loading phonemizer...")
+        if not settings.enable_phonemization:
+            app_logger.info("Phonemization disabled - text will be passed directly")
+            self.phonemizer = None
+            return
+        
+        app_logger.info(f"Loading phonemizer with language={settings.phonemizer_language}...")
         from phonemizer.backend import EspeakBackend
         
         self.phonemizer = EspeakBackend(
-            language="en-us",
-            preserve_punctuation=True,
-            with_stress=True
+            language=settings.phonemizer_language,
+            preserve_punctuation=settings.phonemizer_preserve_punctuation,
+            with_stress=settings.phonemizer_with_stress
         )
-        app_logger.info("✓ Phonemizer loaded")
+        app_logger.info(f"✓ Phonemizer loaded (language: {settings.phonemizer_language})")
     
     def _load_backbone(self, backbone_repo: str, backbone_device: str, gpu_memory_utilization: float):
         """Load the NeuTTS-Air backbone model."""
@@ -243,7 +248,12 @@ class NeuTTSAirWrapper:
         return ref_codes.cpu().numpy()
     
     def _to_phones(self, text: str) -> str:
-        """Convert text to phonemes."""
+        """Convert text to phonemes (or return as-is if phonemization disabled)."""
+        if not settings.enable_phonemization or self.phonemizer is None:
+            # Return text directly without phonemization
+            return text
+        
+        # Phonemize the text
         phones = self.phonemizer.phonemize([text])
         phones = phones[0].split()
         phones = " ".join(phones)
