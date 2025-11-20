@@ -88,12 +88,20 @@ class TTSModel:
             ref_codes = np.array(speech_codes, dtype=np.int64)
             wav = self.neutts_wrapper.infer(text=text, ref_codes=ref_codes, ref_text=reference_text)
             total_time = time.time() - start_time
+            
+            # wav is already [1, samples] from _decode() matching NeuCodec reference
+            # Convert numpy to torch tensor and save exactly like:
+            # torchaudio.save("reconstructed.wav", recon[0, :, :], 24_000)
+            wav_tensor = torch.from_numpy(wav)
+            
+            # Save to BytesIO buffer
             buffer = io.BytesIO()
-            wav_tensor = torch.from_numpy(wav).unsqueeze(0)
             torchaudio.save(buffer, wav_tensor, settings.sample_rate, format="wav")
-            audio_bytes = buffer.getvalue()
+            buffer.seek(0)
+            audio_bytes = buffer.read()
+            
             content_type = "audio/wav"
-            duration = len(wav) / settings.sample_rate
+            duration = wav.shape[1] / settings.sample_rate
             app_logger.info(f"Synth done | audio={duration:.2f}s | total={total_time:.2f}s")
             return (audio_bytes, content_type, duration)
         except Exception as e:
@@ -112,12 +120,20 @@ class TTSModel:
             ref_codes = np.array(speech_codes, dtype=np.int64)
             wav = await self.neutts_wrapper.infer_async(text=text, ref_codes=ref_codes, ref_text=reference_text)
             total_time = time.time() - start_time
+            
+            # wav is already [1, samples] from _decode() matching NeuCodec reference
+            # Convert numpy to torch tensor and save exactly like:
+            # torchaudio.save("reconstructed.wav", recon[0, :, :], 24_000)
+            wav_tensor = torch.from_numpy(wav)
+            
+            # Save to BytesIO buffer
             buffer = io.BytesIO()
-            wav_tensor = torch.from_numpy(wav).unsqueeze(0)
             torchaudio.save(buffer, wav_tensor, settings.sample_rate, format="wav")
-            audio_bytes = buffer.getvalue()
+            buffer.seek(0)
+            audio_bytes = buffer.read()
+            
             content_type = "audio/wav"
-            duration = len(wav) / settings.sample_rate
+            duration = wav.shape[1] / settings.sample_rate
             app_logger.info(f"Async Synth done | audio={duration:.2f}s | total={total_time:.2f}s")
             return (audio_bytes, content_type, duration)
         except Exception as e:

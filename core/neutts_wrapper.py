@@ -257,7 +257,7 @@ class NeuTTSAirWrapper:
             codes_str: String containing speech tokens like "<|speech_123|>"
             
         Returns:
-            Audio waveform as numpy array
+            Audio waveform as numpy array with shape [1, samples] (matching NeuCodec reference)
         """
         # Extract speech token IDs using regex
         speech_ids = [int(num) for num in re.findall(r"<\|speech_(\d+)\|>", codes_str)]
@@ -269,9 +269,10 @@ class NeuTTSAirWrapper:
             codes = torch.tensor(speech_ids, dtype=torch.long)[None, None, :].to(
                 self.codec.device
             )
-            recon = self.codec.decode_code(codes).cpu().numpy()
+            recon = self.codec.decode_code(codes).cpu().numpy()  # Shape: [B, 1, T_24]
         
-        return recon[0, 0, :]
+        # Return [1, samples] format matching NeuCodec reference: recon[0, :, :]
+        return recon[0, :, :]
     
     def _apply_watermark(self, wav: np.ndarray) -> np.ndarray:
         """Apply watermark if available."""
