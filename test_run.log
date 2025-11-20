@@ -1,0 +1,65 @@
+
+============================================================
+🧪 NeuTTS-Air TTS Service - Comprehensive Test Suite
+============================================================
+
+============================================================
+🚀 Starting NeuTTS-Air TTS Service...
+============================================================
+Starting server (this may take a while for model download)...
+  Waiting for server... (10s)
+✓ Server ready after 10s
+
+📍 Testing /health endpoint...
+  ✓ Health endpoint responds
+    Status: degraded, Model loaded: False
+  ✗ Model is loaded
+    Error: Model initialization successful
+
+📍 Testing / endpoint...
+  ✓ Root endpoint responds
+    Version: 1.0.0, Backend: Transformers
+
+📍 Testing POST /v1/voice-profiles...
+
+📍 Creating test audio file...
+  ✓ Created test audio: /Users/shahin.konadath/Documents/project/v7/neutts-serve/tests/test_audio/test_reference.wav
+  Creating profile 'test_voice_auto'...
+  ✗ Create voice profile
+    Error: Status 500: {"detail":"TTS model not available"}
+
+📍 Testing GET /v1/voice-profiles...
+  ✓ List voice profiles
+    Found 0 profile(s)
+
+📍 Testing GET /v1/voice-profiles/{name}...
+  ✗ Get voice profile
+    Error: Status 404
+
+📍 Testing POST /v1/audio/speech...
+  Synthesizing: 'Hello, this is a test of the NeuTTS-Air text to sp...'
+  ✗ Synthesize speech
+    Error: Status 500: {"detail":"TTS model is not available"}
+
+📍 Testing POST /v1/audio/speech/stream...
+  Streaming synthesis...
+  ✗ Stream speech
+    Error: Status 500
+
+📍 Testing DELETE /v1/voice-profiles/{name}...
+  Skipping deletion to preserve test profile
+  ✓ Delete endpoint available
+    Skipped for profile preservation
+
+============================================================
+📊 Test Results
+============================================================
+✅ Passed: 4
+❌ Failed: 5
+⏱️  Time: 10.1s
+============================================================
+⚠️  Some tests failed. Check logs above.
+
+📁 Output files saved to: /Users/shahin.konadath/Documents/project/v7/neutts-serve/tests/test_output
+
+🛑 Stopping server...

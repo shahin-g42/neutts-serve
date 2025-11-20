@@ -1,0 +1,41 @@
+# Core Web Framework
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Configuration & Validation
+pydantic
+pydantic-settings
+
+# Deep Learning & Model Serving
+torch
+torchaudio
+transformers
+vllm==0.11.1
+
+# NeuTTS-Air & NeuCodec
+neucodec
+# neuttsair - Install from source if needed
+
+# Phonemizer
+phonemizer
+
+# Audio Processing
+librosa
+soundfile
+numpy
+
+# Watermarking
+# perth - Install from source if needed
+
+# Optional: GGUF Support
+# llama-cpp-python>=0.2.0  # Uncomment for GGUF quantization support
+
+# Logging & Monitoring
+loguru
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+httpx

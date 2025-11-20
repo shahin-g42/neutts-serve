@@ -1,0 +1,25 @@
+INFO:     Started server process [85183]
+INFO:     Waiting for application startup.
+[32m2025-11-20 01:02:29[0m | [1mINFO    [0m | [36mmain[0m:[36mlifespan[0m:[36m27[0m - [1mStarting NeuTTS-Air TTS service initialization...[0m
+[32m2025-11-20 01:02:29[0m | [1mINFO    [0m | [36mmain[0m:[36mlifespan[0m:[36m31[0m - [1mLoading TTS model...[0m
+[32m2025-11-20 01:02:29[0m | [1mINFO    [0m | [36mcore.tts_model[0m:[36m_initialize_model[0m:[36m64[0m - [1mInitializing NeuTTSAir wrapper...[0m
+[32m2025-11-20 01:02:29[0m | [1mINFO    [0m | [36mcore.neutts_wrapper[0m:[36m__init__[0m:[36m103[0m - [1mInitializing NeuTTSAir wrapper...[0m
+[32m2025-11-20 01:02:29[0m | [1mINFO    [0m | [36mcore.neutts_wrapper[0m:[36m_load_phonemizer[0m:[36m121[0m - [1mLoading phonemizer...[0m
+[32m2025-11-20 01:02:31[0m | [1mINFO    [0m | [36mcore.neutts_wrapper[0m:[36m_load_phonemizer[0m:[36m129[0m - [1m✓ Phonemizer loaded[0m
+[32m2025-11-20 01:02:31[0m | [1mINFO    [0m | [36mcore.neutts_wrapper[0m:[36m_load_backbone[0m:[36m133[0m - [1mLoading backbone from: neuphonic/neutts-air on cpu...[0m
+[32m2025-11-20 01:02:31[0m | [1mINFO    [0m | [36mcore.neutts_wrapper[0m:[36m_load_backbone[0m:[36m190[0m - [1mLoading standard transformers model...[0m
+Skipping import of cpp extensions due to incompatible torch version 2.8.0 for torchao version 0.14.0         Please see GitHub issue #2919 for more info
+W1120 01:02:56.917000 85183 torch/distributed/elastic/multiprocessing/redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+[32m2025-11-20 01:02:59[0m | [1mINFO    [0m | [36mcore.neutts_wrapper[0m:[36m_load_backbone[0m:[36m198[0m - [1m✓ Transformers backbone loaded[0m
+[32m2025-11-20 01:02:59[0m | [1mINFO    [0m | [36mcore.neutts_wrapper[0m:[36m_load_codec[0m:[36m202[0m - [1mLoading codec from: neuphonic/neucodec on cpu...[0m
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 2688.66it/s]
+/Users/shahin.konadath/Library/Python/3.13/lib/python/site-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+  WeightNorm.apply(module, name, dim)
+[32m2025-11-20 01:03:02[0m | [1mINFO    [0m | [36mcore.neutts_wrapper[0m:[36m_load_codec[0m:[36m207[0m - [1m✓ NeuCodec loaded[0m
+[32m2025-11-20 01:03:02[0m | [31m[1mERROR   [0m | [36mapi.tts[0m:[36mget_tts_model[0m:[36m30[0m - [31m[1mFailed to initialize TTS model: Failed to initialize TTS model: module 'perth' has no attribute 'PerthImplicitWatermarker'[0m
+[32m2025-11-20 01:03:02[0m | [31m[1mERROR   [0m | [36mmain[0m:[36mlifespan[0m:[36m40[0m - [31m[1mFailed to load TTS model[0m
+INFO:     Application startup complete.
+ERROR:    [Errno 48] error while attempting to bind on address ('127.0.0.1', 8002): address already in use
+INFO:     Waiting for application shutdown.
+[32m2025-11-20 01:03:02[0m | [1mINFO    [0m | [36mmain[0m:[36mlifespan[0m:[36m46[0m - [1mShutting down NeuTTS-Air TTS service...[0m
+INFO:     Application shutdown complete.
