@@ -76,9 +76,6 @@ class NeuTTSAirWrapper:
             max_context: Maximum context length
             gpu_memory_utilization: GPU memory utilization for vLLM
         """
-        # Debug log the device parameters
-        app_logger.info(f"[DEBUG] __init__ called with backbone_device='{backbone_device}', codec_device='{codec_device}'")
-        
         # Constants
         self.sample_rate = 24_000
         self.max_context = max_context
@@ -185,21 +182,13 @@ class NeuTTSAirWrapper:
             else:
                 # Use standard vLLM.LLM for non-streaming
                 app_logger.info("Loading vLLM.LLM...")
-                try:
-                    self.backbone = vllm.LLM(
-                        model=backbone_repo,
-                        seed=settings.seed,
-                        gpu_memory_utilization=gpu_memory_utilization,
-                        max_model_len=self.max_context,
-                        tensor_parallel_size=1,  # Explicitly set tensor parallelism
-                        trust_remote_code=True,  # Allow custom model code
-                    )
-                    app_logger.info("✓ vLLM.LLM loaded")
-                except Exception as e:
-                    app_logger.error(f"Failed to initialize vLLM.LLM: {e}")
-                    import traceback
-                    app_logger.error(f"Full traceback:\n{traceback.format_exc()}")
-                    raise
+                self.backbone = vllm.LLM(
+                    model=backbone_repo,
+                    seed=settings.seed,
+                    gpu_memory_utilization=gpu_memory_utilization,
+                    max_model_len=self.max_context,
+                )
+                app_logger.info("✓ vLLM.LLM loaded")
             
             # Load tokenizer for vLLM
             app_logger.info("Loading tokenizer from transformers...")
@@ -227,11 +216,6 @@ class NeuTTSAirWrapper:
         """Load the NeuCodec model for audio encoding/decoding."""
         app_logger.info(f"Loading codec from: {codec_repo} on {codec_device}...")
         from neucodec import NeuCodec
-        
-        # Validate codec_device
-        if not codec_device or codec_device.strip() == "":
-            codec_device = "cuda" if torch.cuda.is_available() else "cpu"
-            app_logger.warning(f"Empty codec_device, defaulting to: {codec_device}")
         
         self.codec = NeuCodec.from_pretrained(codec_repo)
         self.codec.eval().to(torch.device(codec_device))

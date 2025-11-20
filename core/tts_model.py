@@ -34,13 +34,6 @@ class TTSModelConfig:
     @classmethod
     def from_settings(cls):
         """Create TTSModelConfig from application settings."""
-        # Debug log to see what settings are being loaded
-        app_logger.info(f"[DEBUG] TTSModelConfig.from_settings():")
-        app_logger.info(f"[DEBUG]   backbone_device = '{settings.backbone_device}'")
-        app_logger.info(f"[DEBUG]   codec_device = '{settings.codec_device}'")
-        app_logger.info(f"[DEBUG]   model_checkpoint_path = '{settings.model_checkpoint_path}'")
-        app_logger.info(f"[DEBUG]   codec_repo = '{settings.codec_repo}'")
-        
         return cls(
             model_checkpoint_path=settings.model_checkpoint_path,
             codec_repo=settings.codec_repo,
