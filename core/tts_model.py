@@ -79,6 +79,7 @@ class TTSModel:
     def synthesize_speech_with_tokens(
         self, text: str, speech_codes: List[int], reference_text: str = "", **kwargs
     ) -> Tuple[bytes, str, float]:
+        """Synchronous synthesis for non-AsyncLLMEngine backends."""
         try:
             start_time = time.time()
             if not speech_codes:
@@ -99,9 +100,34 @@ class TTSModel:
             app_logger.error(f"Failed to synthesize speech: {e}")
             raise SynthesisError(f"Failed to synthesize speech: {e}")
     
+    async def synthesize_speech_with_tokens_async(
+        self, text: str, speech_codes: List[int], reference_text: str = "", **kwargs
+    ) -> Tuple[bytes, str, float]:
+        """Async synthesis for AsyncLLMEngine backend."""
+        try:
+            start_time = time.time()
+            if not speech_codes:
+                raise ValueError("Speech codes required for voice cloning")
+            app_logger.info(f"Async Synthesis | codes={len(speech_codes)} | text={len(text)} chars")
+            ref_codes = np.array(speech_codes, dtype=np.int64)
+            wav = await self.neutts_wrapper.infer_async(text=text, ref_codes=ref_codes, ref_text=reference_text)
+            total_time = time.time() - start_time
+            buffer = io.BytesIO()
+            wav_tensor = torch.from_numpy(wav).unsqueeze(0)
+            torchaudio.save(buffer, wav_tensor, settings.sample_rate, format="wav")
+            audio_bytes = buffer.getvalue()
+            content_type = "audio/wav"
+            duration = len(wav) / settings.sample_rate
+            app_logger.info(f"Async Synth done | audio={duration:.2f}s | total={total_time:.2f}s")
+            return (audio_bytes, content_type, duration)
+        except Exception as e:
+            app_logger.error(f"Failed to synthesize speech (async): {e}")
+            raise SynthesisError(f"Failed to synthesize speech: {e}")
+    
     def stream_speech_with_tokens(
         self, text: str, speech_codes: List[int], reference_text: str = "", **kwargs
     ) -> Iterator[bytes]:
+        """Stream synthesis by chunking the full audio output."""
         try:
             audio_bytes, _, _ = self.synthesize_speech_with_tokens(
                 text=text, speech_codes=speech_codes, reference_text=reference_text, **kwargs
