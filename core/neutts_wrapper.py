@@ -211,8 +211,13 @@ class NeuTTSAirWrapper:
         app_logger.info(f"Loading codec from: {codec_repo} on {codec_device}...")
         from neucodec import NeuCodec
         
+        # Validate codec_device
+        if not codec_device or codec_device.strip() == "":
+            codec_device = "cuda" if torch.cuda.is_available() else "cpu"
+            app_logger.warning(f"Empty codec_device, defaulting to: {codec_device}")
+        
         self.codec = NeuCodec.from_pretrained(codec_repo)
-        self.codec.eval().to(codec_device)
+        self.codec.eval().to(torch.device(codec_device))
         app_logger.info("✓ NeuCodec loaded")
     
     def encode_reference(self, ref_audio_path: str | Path) -> np.ndarray:
