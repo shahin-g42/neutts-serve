@@ -76,6 +76,9 @@ class NeuTTSAirWrapper:
             max_context: Maximum context length
             gpu_memory_utilization: GPU memory utilization for vLLM
         """
+        # Debug log the device parameters
+        app_logger.info(f"[DEBUG] __init__ called with backbone_device='{backbone_device}', codec_device='{codec_device}'")
+        
         # Constants
         self.sample_rate = 24_000
         self.max_context = max_context
@@ -191,8 +194,14 @@ class NeuTTSAirWrapper:
                 app_logger.info("✓ vLLM.LLM loaded")
             
             # Load tokenizer for vLLM
-            from transformers import AutoTokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(backbone_repo)
+            app_logger.info("Loading tokenizer from transformers...")
+            try:
+                from transformers import AutoTokenizer
+                self.tokenizer = AutoTokenizer.from_pretrained(backbone_repo)
+                app_logger.info("✓ Tokenizer loaded")
+            except Exception as e:
+                app_logger.error(f"Failed to load tokenizer: {e}")
+                raise
         
         # Standard Transformers loading
         else:
