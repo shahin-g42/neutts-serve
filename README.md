@@ -30,6 +30,15 @@ A production-ready Text-to-Speech service using **NeuTTS-Air** and **NeuCodec**,
 
 ## Installation
 
+### Platform-Specific Setup
+
+**For Linux (Ubuntu/Debian) with GPU:**
+- See [LINUX_SETUP.md](docs/LINUX_SETUP.md) for detailed instructions
+- Quick start: `cp .env.linux .env && python3 main.py`
+
+**For macOS:**
+- Use `.env` as-is (macOS-specific paths included)
+
 ### Prerequisites
 
 ```bash
