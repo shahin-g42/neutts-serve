@@ -424,6 +424,7 @@ class NeuTTSAirWrapper:
             Generated text containing speech tokens
         """
         from vllm import SamplingParams
+        from vllm.inputs import TokensPrompt
         
         speech_end_id = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_END|>")
         
@@ -437,11 +438,11 @@ class NeuTTSAirWrapper:
             stop_token_ids=[speech_end_id],
         )
         
-        # Standard vLLM.LLM (synchronous)
+        # Standard vLLM.LLM requires TokensPrompt type
+        prompt = TokensPrompt(prompt_token_ids=prompt_ids)
         outputs = self.backbone.generate(
-            prompts=None,
-            sampling_params=sampling_params,
-            prompt_token_ids=prompt_ids
+            prompts=[prompt],
+            sampling_params=sampling_params
         )
         output_str = outputs[0].outputs[0].text
         
