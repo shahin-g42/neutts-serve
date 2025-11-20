@@ -329,9 +329,30 @@ class NeuTTSAirWrapper:
         
         return ids
     
+    async def infer_async(self, text: str, ref_codes: np.ndarray | list, ref_text: str) -> np.ndarray:
+        """
+        Perform async inference to generate speech from text (for AsyncLLMEngine).
+        
+        Args:
+            text: Input text to synthesize
+            ref_codes: Encoded reference audio codes
+            ref_text: Reference text transcription
+            
+        Returns:
+            Generated speech waveform
+        """
+        prompt_ids = self._apply_chat_template(ref_codes, ref_text, text)
+        output_str = await self._infer_vllm_async(prompt_ids)
+        
+        # Decode to audio
+        wav = self._decode(output_str)
+        watermarked_wav = self._apply_watermark(wav)
+        
+        return watermarked_wav
+    
     def infer(self, text: str, ref_codes: np.ndarray | list, ref_text: str) -> np.ndarray:
         """
-        Perform inference to generate speech from text.
+        Perform inference to generate speech from text (synchronous wrapper).
         
         Args:
             text: Input text to synthesize
@@ -343,10 +364,12 @@ class NeuTTSAirWrapper:
         """
         if self._is_quantized_model:
             output_str = self._infer_ggml(ref_codes, ref_text, text)
-        elif self._use_vllm:
+        elif self._use_vllm and not self._use_async_engine:
+            # Standard vLLM.LLM (synchronous)
             prompt_ids = self._apply_chat_template(ref_codes, ref_text, text)
-            output_str = self._infer_vllm(prompt_ids)
+            output_str = self._infer_vllm_sync(prompt_ids)
         else:
+            # Standard Transformers (synchronous)
             prompt_ids = self._apply_chat_template(ref_codes, ref_text, text)
             output_str = self._infer_torch(prompt_ids)
         
@@ -390,9 +413,9 @@ class NeuTTSAirWrapper:
         
         return output_str
     
-    def _infer_vllm(self, prompt_ids: list[int]) -> str:
+    def _infer_vllm_sync(self, prompt_ids: list[int]) -> str:
         """
-        Inference using vLLM backend (handles both LLM and AsyncLLMEngine).
+        Inference using standard vLLM.LLM (synchronous).
         
         Args:
             prompt_ids: Token IDs for the prompt
@@ -400,7 +423,6 @@ class NeuTTSAirWrapper:
         Returns:
             Generated text containing speech tokens
         """
-        import vllm
         from vllm import SamplingParams
         
         speech_end_id = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_END|>")
@@ -415,38 +437,52 @@ class NeuTTSAirWrapper:
             stop_token_ids=[speech_end_id],
         )
         
-        # Check if using AsyncLLMEngine
-        if self._use_async_engine:
-            # AsyncLLMEngine requires async operations
-            # For synchronous calls, we need to use asyncio.run
-            import asyncio
-            
-            async def async_generate():
-                # Use AsyncLLMEngine.generate() which is async generator
-                request_id = f"sync-{id(prompt_ids)}"
-                final_output = None
-                
-                async for output in self.backbone.generate(
-                    request_id=request_id,
-                    prompt_token_ids=prompt_ids,
-                    sampling_params=sampling_params
-                ):
-                    final_output = output
-                
-                return final_output.outputs[0].text if final_output else ""
-            
-            # Run async function in sync context
-            output_str = asyncio.run(async_generate())
-        else:
-            # Standard vLLM.LLM (synchronous)
-            outputs = self.backbone.generate(
-                prompts=None,
-                sampling_params=sampling_params,
-                prompt_token_ids=prompt_ids
-            )
-            output_str = outputs[0].outputs[0].text
+        # Standard vLLM.LLM (synchronous)
+        outputs = self.backbone.generate(
+            prompts=None,
+            sampling_params=sampling_params,
+            prompt_token_ids=prompt_ids
+        )
+        output_str = outputs[0].outputs[0].text
         
         return output_str
+    
+    async def _infer_vllm_async(self, prompt_ids: list[int]) -> str:
+        """
+        Inference using vLLM AsyncLLMEngine (asynchronous).
+        
+        Args:
+            prompt_ids: Token IDs for the prompt
+            
+        Returns:
+            Generated text containing speech tokens
+        """
+        from vllm import SamplingParams
+        
+        speech_end_id = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_END|>")
+        
+        # vLLM sampling parameters
+        sampling_params = SamplingParams(
+            max_tokens=self.max_context,
+            min_tokens=settings.min_tokens,
+            temperature=settings.temperature,
+            top_k=settings.top_k,
+            top_p=settings.top_p,
+            stop_token_ids=[speech_end_id],
+        )
+        
+        # AsyncLLMEngine - use async generator
+        request_id = f"req-{id(prompt_ids)}"
+        final_output = None
+        
+        async for output in self.backbone.generate(
+            request_id=request_id,
+            prompt_token_ids=prompt_ids,
+            sampling_params=sampling_params
+        ):
+            final_output = output
+        
+        return final_output.outputs[0].text if final_output else ""
     
     def _infer_ggml(self, ref_codes: np.ndarray | list, ref_text: str, input_text: str) -> str:
         """

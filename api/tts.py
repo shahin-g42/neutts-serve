@@ -61,11 +61,19 @@ async def create_speech(request: TTSRequest):
         
         app_logger.info(f"Loaded | codes={len(speech_codes)} | ref_text={len(reference_text)} chars")
         
-        audio_bytes, content_type, duration = tts_model.synthesize_speech_with_tokens(
-            text=request.input,
-            speech_codes=speech_codes,
-            reference_text=reference_text
-        )
+        # Use async synthesis for AsyncLLMEngine, sync otherwise
+        if tts_model.config.use_async_engine and tts_model.config.use_vllm:
+            audio_bytes, content_type, duration = await tts_model.synthesize_speech_with_tokens_async(
+                text=request.input,
+                speech_codes=speech_codes,
+                reference_text=reference_text
+            )
+        else:
+            audio_bytes, content_type, duration = tts_model.synthesize_speech_with_tokens(
+                text=request.input,
+                speech_codes=speech_codes,
+                reference_text=reference_text
+            )
         
         app_logger.info(f"Complete | duration={duration:.2f}s | size={len(audio_bytes)/1024:.1f}KB")
         
