@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     # Device configuration
     backbone_device: str = Field(
         default="cuda",
-        description="Device for backbone model (cpu/cuda/gpu)",
+        description="Device for backbone model (cpu/cuda)",
         env="BACKBONE_DEVICE"
     )
     codec_device: str = Field(

@@ -67,7 +67,7 @@ class NeuTTSAirWrapper:
         
         Args:
             backbone_repo: Model repository for NeuTTS-Air backbone
-            backbone_device: Device for backbone (cpu/cuda/gpu)
+            backbone_device: Device for backbone (cpu/cuda)
             codec_repo: Repository for NeuCodec
             codec_device: Device for codec (cpu/cuda)
             use_vllm: Enable vLLM acceleration
@@ -150,10 +150,10 @@ class NeuTTSAirWrapper:
                 repo_id=backbone_repo,
                 filename="*.gguf",
                 verbose=False,
-                n_gpu_layers=-1 if backbone_device == "gpu" else 0,
+                n_gpu_layers=-1 if backbone_device == "cuda" else 0,
                 n_ctx=self.max_context,
                 mlock=True,
-                flash_attn=True if backbone_device == "gpu" else False,
+                flash_attn=True if backbone_device == "cuda" else False,
             )
             self._is_quantized_model = True
             app_logger.info("✓ GGUF backbone loaded")
@@ -343,6 +343,9 @@ class NeuTTSAirWrapper:
         """
         if self._is_quantized_model:
             output_str = self._infer_ggml(ref_codes, ref_text, text)
+        elif self._use_vllm:
+            prompt_ids = self._apply_chat_template(ref_codes, ref_text, text)
+            output_str = self._infer_vllm(prompt_ids)
         else:
             prompt_ids = self._apply_chat_template(ref_codes, ref_text, text)
             output_str = self._infer_torch(prompt_ids)
@@ -355,7 +358,7 @@ class NeuTTSAirWrapper:
     
     def _infer_torch(self, prompt_ids: list[int]) -> str:
         """
-        Inference using PyTorch transformers backend.
+        Inference using standard PyTorch transformers backend (non-vLLM).
         
         Args:
             prompt_ids: Token IDs for the prompt
@@ -363,6 +366,7 @@ class NeuTTSAirWrapper:
         Returns:
             Generated text containing speech tokens
         """
+        # Standard transformers - backbone has .device attribute
         prompt_tensor = torch.tensor(prompt_ids).unsqueeze(0).to(self.backbone.device)
         speech_end_id = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_END|>")
         
@@ -383,6 +387,64 @@ class NeuTTSAirWrapper:
             output_tokens[0, input_length:].cpu().numpy().tolist(),
             skip_special_tokens=False
         )
+        
+        return output_str
+    
+    def _infer_vllm(self, prompt_ids: list[int]) -> str:
+        """
+        Inference using vLLM backend (handles both LLM and AsyncLLMEngine).
+        
+        Args:
+            prompt_ids: Token IDs for the prompt
+            
+        Returns:
+            Generated text containing speech tokens
+        """
+        import vllm
+        from vllm import SamplingParams
+        
+        speech_end_id = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_END|>")
+        
+        # vLLM sampling parameters
+        sampling_params = SamplingParams(
+            max_tokens=self.max_context,
+            min_tokens=settings.min_tokens,
+            temperature=settings.temperature,
+            top_k=settings.top_k,
+            top_p=settings.top_p,
+            stop_token_ids=[speech_end_id],
+        )
+        
+        # Check if using AsyncLLMEngine
+        if self._use_async_engine:
+            # AsyncLLMEngine requires async operations
+            # For synchronous calls, we need to use asyncio.run
+            import asyncio
+            
+            async def async_generate():
+                # Use AsyncLLMEngine.generate() which is async generator
+                request_id = f"sync-{id(prompt_ids)}"
+                final_output = None
+                
+                async for output in self.backbone.generate(
+                    request_id=request_id,
+                    prompt_token_ids=prompt_ids,
+                    sampling_params=sampling_params
+                ):
+                    final_output = output
+                
+                return final_output.outputs[0].text if final_output else ""
+            
+            # Run async function in sync context
+            output_str = asyncio.run(async_generate())
+        else:
+            # Standard vLLM.LLM (synchronous)
+            outputs = self.backbone.generate(
+                prompts=None,
+                sampling_params=sampling_params,
+                prompt_token_ids=prompt_ids
+            )
+            output_str = outputs[0].outputs[0].text
         
         return output_str
     
