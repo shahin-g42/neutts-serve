@@ -115,7 +115,7 @@ def main():
     Main function to process all audio/text pairs and create voice profiles.
     """
     # Configuration
-    folder_path = sys.argv[1] if len(sys.argv) > 1 else "data/voice_samples"
+    folder_path = sys.argv[1] if len(sys.argv) > 1 else "data/tts/.dset/vp"
     api_url = sys.argv[2] if len(sys.argv) > 2 else "http://127.0.0.1:8002"
     
     print("=" * 60)
