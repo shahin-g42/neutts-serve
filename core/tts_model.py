@@ -14,6 +14,7 @@ from core.logging import app_logger
 from core.exceptions import ModelLoadingError, SynthesisError
 from core.settings import settings
 from core.neutts_wrapper import NeuTTSAirWrapper
+from utils.audio_converter import convert_audio_format
 
 
 @dataclass
@@ -77,64 +78,66 @@ class TTSModel:
             raise ModelLoadingError(f"Failed to initialize TTS model: {e}")
     
     def synthesize_speech_with_tokens(
-        self, text: str, speech_codes: List[int], reference_text: str = "", **kwargs
+        self, text: str, speech_codes: List[int], reference_text: str = "", 
+        response_format: str = "mp3", **kwargs
     ) -> Tuple[bytes, str, float]:
         """Synchronous synthesis for non-AsyncLLMEngine backends."""
         try:
             start_time = time.time()
             if not speech_codes:
                 raise ValueError("Speech codes required for voice cloning")
-            app_logger.info(f"Synthesis | codes={len(speech_codes)} | text={len(text)} chars")
+            app_logger.info(f"Synthesis | codes={len(speech_codes)} | text={len(text)} chars | format={response_format}")
             ref_codes = np.array(speech_codes, dtype=np.int64)
             wav = self.neutts_wrapper.infer(text=text, ref_codes=ref_codes, ref_text=reference_text)
-            total_time = time.time() - start_time
             
-            # wav is already [1, samples] from _decode() matching NeuCodec reference
-            # Convert numpy to torch tensor and save exactly like:
-            # torchaudio.save("reconstructed.wav", recon[0, :, :], 24_000)
+            # wav is [1, samples] numpy array from _decode()
             wav_tensor = torch.from_numpy(wav)
             
-            # Save to BytesIO buffer
-            buffer = io.BytesIO()
-            torchaudio.save(buffer, wav_tensor, settings.sample_rate, format="wav")
-            buffer.seek(0)
-            audio_bytes = buffer.read()
+            # Convert to requested format (MP3 or WAV) at 24kHz
+            audio_bytes, content_type = convert_audio_format(
+                wav_tensor=wav_tensor,
+                orig_sr=settings.sample_rate,  # 24kHz from NeuCodec
+                target_format=response_format,
+                target_sr=settings.sample_rate,  # Keep at 24kHz (no resample)
+                bitrate="128k"
+            )
             
-            content_type = "audio/wav"
+            total_time = time.time() - start_time
             duration = wav.shape[1] / settings.sample_rate
-            app_logger.info(f"Synth done | audio={duration:.2f}s | total={total_time:.2f}s")
+            app_logger.info(f"Synth done | audio={duration:.2f}s | total={total_time:.2f}s | size={len(audio_bytes)/1024:.1f}KB")
             return (audio_bytes, content_type, duration)
         except Exception as e:
             app_logger.error(f"Failed to synthesize speech: {e}")
             raise SynthesisError(f"Failed to synthesize speech: {e}")
     
     async def synthesize_speech_with_tokens_async(
-        self, text: str, speech_codes: List[int], reference_text: str = "", **kwargs
+        self, text: str, speech_codes: List[int], reference_text: str = "", 
+        response_format: str = "mp3", **kwargs
     ) -> Tuple[bytes, str, float]:
         """Async synthesis for AsyncLLMEngine backend."""
         try:
             start_time = time.time()
             if not speech_codes:
                 raise ValueError("Speech codes required for voice cloning")
-            app_logger.info(f"Async Synthesis | codes={len(speech_codes)} | text={len(text)} chars")
+            app_logger.info(f"Async Synthesis | codes={len(speech_codes)} | text={len(text)} chars | format={response_format}")
             ref_codes = np.array(speech_codes, dtype=np.int64)
             wav = await self.neutts_wrapper.infer_async(text=text, ref_codes=ref_codes, ref_text=reference_text)
-            total_time = time.time() - start_time
             
-            # wav is already [1, samples] from _decode() matching NeuCodec reference
-            # Convert numpy to torch tensor and save exactly like:
-            # torchaudio.save("reconstructed.wav", recon[0, :, :], 24_000)
+            # wav is [1, samples] numpy array from _decode()
             wav_tensor = torch.from_numpy(wav)
             
-            # Save to BytesIO buffer
-            buffer = io.BytesIO()
-            torchaudio.save(buffer, wav_tensor, settings.sample_rate, format="wav")
-            buffer.seek(0)
-            audio_bytes = buffer.read()
+            # Convert to requested format (MP3 or WAV) at 24kHz
+            audio_bytes, content_type = convert_audio_format(
+                wav_tensor=wav_tensor,
+                orig_sr=settings.sample_rate,  # 24kHz from NeuCodec
+                target_format=response_format,
+                target_sr=settings.sample_rate,  # Keep at 24kHz (no resample)
+                bitrate="128k"
+            )
             
-            content_type = "audio/wav"
+            total_time = time.time() - start_time
             duration = wav.shape[1] / settings.sample_rate
-            app_logger.info(f"Async Synth done | audio={duration:.2f}s | total={total_time:.2f}s")
+            app_logger.info(f"Async Synth done | audio={duration:.2f}s | total={total_time:.2f}s | size={len(audio_bytes)/1024:.1f}KB")
             return (audio_bytes, content_type, duration)
         except Exception as e:
             app_logger.error(f"Failed to synthesize speech (async): {e}")

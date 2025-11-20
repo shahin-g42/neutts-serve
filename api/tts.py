@@ -66,13 +66,15 @@ async def create_speech(request: TTSRequest):
             audio_bytes, content_type, duration = await tts_model.synthesize_speech_with_tokens_async(
                 text=request.input,
                 speech_codes=speech_codes,
-                reference_text=reference_text
+                reference_text=reference_text,
+                response_format=request.response_format.value
             )
         else:
             audio_bytes, content_type, duration = tts_model.synthesize_speech_with_tokens(
                 text=request.input,
                 speech_codes=speech_codes,
-                reference_text=reference_text
+                reference_text=reference_text,
+                response_format=request.response_format.value
             )
         
         app_logger.info(f"Complete | duration={duration:.2f}s | size={len(audio_bytes)/1024:.1f}KB")

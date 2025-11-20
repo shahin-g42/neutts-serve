@@ -113,6 +113,7 @@ def main():
     texts_file = sys.argv[2] if len(sys.argv) > 2 else "data/target_texts.txt"
     output_dir = sys.argv[3] if len(sys.argv) > 3 else "generated_audio"
     num_generations = int(sys.argv[4]) if len(sys.argv) > 4 else 10
+    response_format = sys.argv[5] if len(sys.argv) > 5 else "mp3"  # Default to MP3
     
     print("=" * 60)
     print("🔊 NeuTTS-Air Audio Generator")
@@ -121,6 +122,7 @@ def main():
     print(f"📄 Texts file: {texts_file}")
     print(f"📁 Output directory: {output_dir}")
     print(f"🔢 Number of generations: {num_generations}")
+    print(f"🎵 Audio format: {response_format}")
     print()
     
     # Create output directory if it doesn't exist
@@ -161,18 +163,18 @@ def main():
         voice_profile = random.choice(voice_profiles)
         text = random.choice(texts)
         
-        # Create output filename
+        # Create output filename with correct extension
         output_file = os.path.join(
             output_dir, 
-            f"generated_{i+1:03d}_{voice_profile['name']}.wav"
+            f"generated_{i+1:03d}_{voice_profile['name']}.{response_format}"
         )
         
         print(f"\n[{i+1}/{num_generations}] Generating audio:")
         print(f"   Voice: {voice_profile['name']}")
         print(f"   Text: {text[:70]}{'...' if len(text) > 70 else ''}")
         
-        # Generate audio
-        if generate_audio(api_url, text, voice_profile['name'], output_file):
+        # Generate audio with specified format
+        if generate_audio(api_url, text, voice_profile['name'], output_file, response_format):
             generated_count += 1
     
     print()
