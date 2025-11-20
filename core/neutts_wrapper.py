@@ -185,13 +185,21 @@ class NeuTTSAirWrapper:
             else:
                 # Use standard vLLM.LLM for non-streaming
                 app_logger.info("Loading vLLM.LLM...")
-                self.backbone = vllm.LLM(
-                    model=backbone_repo,
-                    seed=settings.seed,
-                    gpu_memory_utilization=gpu_memory_utilization,
-                    max_model_len=self.max_context
-                )
-                app_logger.info("✓ vLLM.LLM loaded")
+                try:
+                    self.backbone = vllm.LLM(
+                        model=backbone_repo,
+                        seed=settings.seed,
+                        gpu_memory_utilization=gpu_memory_utilization,
+                        max_model_len=self.max_context,
+                        tensor_parallel_size=1,  # Explicitly set tensor parallelism
+                        trust_remote_code=True,  # Allow custom model code
+                    )
+                    app_logger.info("✓ vLLM.LLM loaded")
+                except Exception as e:
+                    app_logger.error(f"Failed to initialize vLLM.LLM: {e}")
+                    import traceback
+                    app_logger.error(f"Full traceback:\n{traceback.format_exc()}")
+                    raise
             
             # Load tokenizer for vLLM
             app_logger.info("Loading tokenizer from transformers...")
