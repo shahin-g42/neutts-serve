@@ -35,7 +35,7 @@ def get_tts_model():
 router = APIRouter(prefix="/v1", tags=["text-to-speech"])
 
 
-@router.post("/audio/speech", response_class=Response)
+@router.post("/audio/speech")
 async def create_speech(request: TTSRequest):
     """Creates audio speech from the input text."""
     tts_model = get_tts_model()
@@ -79,8 +79,12 @@ async def create_speech(request: TTSRequest):
         
         app_logger.info(f"Complete | duration={duration:.2f}s | size={len(audio_bytes)/1024:.1f}KB")
         
-        return Response(
-            content=audio_bytes,
+        # Use StreamingResponse for consistent streaming behavior
+        from io import BytesIO
+        audio_buffer = BytesIO(audio_bytes)
+        
+        return StreamingResponse(
+            audio_buffer,
             media_type=content_type,
             headers={
                 "Content-Disposition": f"inline; filename=speech.{request.response_format.value}"
