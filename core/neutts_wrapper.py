@@ -277,6 +277,7 @@ class NeuTTSAirWrapper:
         """
         # Extract speech token IDs using regex
         speech_ids = [int(num) for num in re.findall(r"<\|speech_(\d+)\|>", codes_str)]
+        app_logger.info(f"Speech IDs: {len(speech_ids)}")
         
         if len(speech_ids) == 0:
             raise ValueError("No valid speech tokens found in the output.")
@@ -384,6 +385,7 @@ class NeuTTSAirWrapper:
         elif self._use_vllm and not self._use_async_engine:
             # Standard vLLM.LLM (synchronous)
             prompt_ids = self._apply_chat_template(ref_codes, ref_text, text)
+            app_logger.info(f"Prompt IDs: {len(prompt_ids)}")
             output_str = self._infer_vllm_sync(prompt_ids)
         else:
             # Standard Transformers (synchronous)
@@ -462,6 +464,8 @@ class NeuTTSAirWrapper:
             sampling_params=sampling_params
         )
         output_str = outputs[0].outputs[0].text
+        app_logger.info(f"Output str: {output_str[:100]}")
+        app_logger.info(f"Output length: {len(output_str[100:])}")
         
         return output_str
     
