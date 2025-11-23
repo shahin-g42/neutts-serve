@@ -337,7 +337,7 @@ class NeuTTSAirWrapper:
 
         app_logger.info(f"ids: {len(ids)}")
         tokens = self.tokenizer.decode(ids, skip_special_tokens=False)
-        app_logger.info(f"tokens: {len(tokens)}")
+        app_logger.info(f"tokens: {tokens}")
 
         codes_str = "".join([f"<|speech_{i}|>" for i in ref_codes])
         codes = self.tokenizer.encode(codes_str, add_special_tokens=False)
