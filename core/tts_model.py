@@ -105,7 +105,7 @@ class TTSModel:
             total_time = time.time() - start_time
             duration = wav.shape[1] / settings.sample_rate
             app_logger.info(f"Synth done | audio={duration:.2f}s | total={total_time:.2f}s | size={len(audio_bytes)/1024:.1f}KB")
-            return (audio_bytes, content_type, duration)
+            return audio_bytes, content_type, duration
         except Exception as e:
             app_logger.error(f"Failed to synthesize speech: {e}")
             raise SynthesisError(f"Failed to synthesize speech: {e}")
