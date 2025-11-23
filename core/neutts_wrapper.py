@@ -439,6 +439,7 @@ class NeuTTSAirWrapper:
             prompt_ids = self._apply_chat_template(ref_codes, ref_text, text)
             app_logger.info(f"Prompt IDs: {len(prompt_ids)}")
             output_str = self._infer_vllm_sync(prompt_ids)
+            app_logger.info(f"Output Str: {output_str}")
         else:
             # Standard Transformers (synchronous)
             prompt_ids = self._apply_chat_template(ref_codes, ref_text, text)
