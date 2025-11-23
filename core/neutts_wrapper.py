@@ -309,7 +309,7 @@ class NeuTTSAirWrapper:
             Token IDs for the prompt
         """
 
-        input_text = ref_text + " " + input_text
+        input_text = "<|TEXT_PROMPT_START|>" + ref_text + " " + input_text + "<|TEXT_PROMPT_END|>"
         app_logger.info(f"Input text: {input_text}")
         # Tokenize input text
         input_ids = self.tokenizer.encode(input_text, add_special_tokens=False)
@@ -326,14 +326,10 @@ class NeuTTSAirWrapper:
             }
         ]
 
-        input_tokens = self.tokenizer.apply_chat_template(msg, add_generation_prompt=True)
-        app_logger.info(f"Input tokens: {input_tokens}")
+        gen_prompt_ids = self.tokenizer.apply_chat_template(msg, add_generation_prompt=True)
+        app_logger.info(f"Input tokens: {gen_prompt_ids}")
 
-        text_prompt_start = self.tokenizer.convert_tokens_to_ids("<|TEXT_PROMPT_START|>")
-        text_prompt_end = self.tokenizer.convert_tokens_to_ids("<|TEXT_PROMPT_END|>")
         speech_gen_start = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_START|>")
-
-        gen_prompt_ids = self.tokenizer.encode(input_tokens)
 
         ids = (
                 gen_prompt_ids
