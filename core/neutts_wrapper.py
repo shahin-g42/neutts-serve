@@ -333,18 +333,10 @@ class NeuTTSAirWrapper:
         text_prompt_end = self.tokenizer.convert_tokens_to_ids("<|TEXT_PROMPT_END|>")
         speech_gen_start = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_START|>")
 
-        chat_sys_user = """system: You are an assistant/agent expert with text to speech in multi-languages and dialets. Convert the text to speech.\nuser: """
-        chat_assistant = """\nassistant: """
-
-        ids_sys_user = self.tokenizer.encode(chat_sys_user)
-        ids_assistant = self.tokenizer.encode(chat_assistant)
+        gen_prompt_ids = self.tokenizer.encode(input_tokens)
 
         ids = (
-                ids_sys_user
-                + [text_prompt_start]
-                + input_ids
-                + [text_prompt_end]
-                + ids_assistant
+                gen_prompt_ids
                 + [speech_gen_start]
         )
 
