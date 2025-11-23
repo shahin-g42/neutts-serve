@@ -315,6 +315,20 @@ class NeuTTSAirWrapper:
         input_ids = self.tokenizer.encode(input_text, add_special_tokens=False)
         app_logger.info(f"Input ids: {len(input_ids)}")
 
+        msg = [
+            {
+                "role": "system",
+                "content": "You are an assistant/agent expert with text to speech in multi-languages and dialets. Convert the text to speech."
+            },
+            {
+                "role": "user",
+                "content": input_text
+            }
+        ]
+
+        input_tokens = self.tokenizer.apply_chat_template(msg)
+        app_logger.info(f"Input tokens: {input_tokens}")
+
         text_prompt_start = self.tokenizer.convert_tokens_to_ids("<|TEXT_PROMPT_START|>")
         text_prompt_end = self.tokenizer.convert_tokens_to_ids("<|TEXT_PROMPT_END|>")
         speech_gen_start = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_START|>")
@@ -333,7 +347,6 @@ class NeuTTSAirWrapper:
                 + ids_assistant
                 + [speech_gen_start]
         )
-
 
         app_logger.info(f"ids: {len(ids)}")
         tokens = self.tokenizer.decode(ids, skip_special_tokens=False)
