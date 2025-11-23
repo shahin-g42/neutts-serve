@@ -325,21 +325,22 @@ class NeuTTSAirWrapper:
         ids_sys_user = self.tokenizer.encode(chat_sys_user)
         ids_assistant = self.tokenizer.encode(chat_assistant)
 
-        ids = (ids_sys_user
-               + [text_prompt_start]
-               + input_ids
-               + [text_prompt_end]
-               + ids_assistant
-               + [speech_gen_start]
-               )
+        ids = (
+                ids_sys_user
+                + [text_prompt_start]
+                + input_ids
+                + [text_prompt_end]
+                + ids_assistant
+                + [speech_gen_start]
+        )
 
         codes_str = "".join([f"<|speech_{i}|>" for i in ref_codes])
         codes = self.tokenizer.encode(codes_str, add_special_tokens=False)
 
         ids = ids + codes
 
-        app_logger.info(f"Codes: {len(ids)}")
-        app_logger.info(f"Final Ids: {len(ids)}")
+        app_logger.info(f"Codes: {codes}")
+        app_logger.info(f"Final Ids: {ids}")
 
         return ids
 
