@@ -326,32 +326,32 @@ class NeuTTSAirWrapper:
             }
         ]
 
-        # gen_prompt_ids = self.tokenizer.apply_chat_template(msg, add_generation_prompt=True)
-        # app_logger.info(f"Input tokens: {gen_prompt_ids}")
-        #
-        # speech_gen_start = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_START|>")
-        #
-        # ids = (
-        #         gen_prompt_ids
-        #         + [speech_gen_start]
-        # )
-        #
-        # app_logger.info(f"ids: {len(ids)}")
-        #
-        # codes_str = "".join([f"<|speech_{i}|>" for i in ref_codes])
-        # codes = self.tokenizer.encode(codes_str, add_special_tokens=False)
-        #
-        # ids = ids + codes
-        #
-        # tokens = self.tokenizer.decode(ids, skip_special_tokens=False)
-        # app_logger.info(f"tokens: {tokens}")
-        #
-        # app_logger.info(f"Codes: {len(codes)}")
-        # app_logger.info(f"Final Ids: {len(ids)}")
-        #
-        # return ids
+        gen_prompt_ids = self.tokenizer.apply_chat_template(msg, add_generation_prompt=True)
+        app_logger.info(f"Input tokens: {gen_prompt_ids}")
 
-        return self.tokenizer.apply_chat_template(msg, add_generation_prompt=True)
+        speech_gen_start = self.tokenizer.convert_tokens_to_ids("<|SPEECH_GENERATION_START|>")
+
+        ids = (
+                gen_prompt_ids
+                + [speech_gen_start]
+        )
+
+        app_logger.info(f"ids: {len(ids)}")
+
+        codes_str = "".join([f"<|speech_{i}|>" for i in ref_codes])
+        codes = self.tokenizer.encode(codes_str, add_special_tokens=False)
+
+        ids = ids + codes
+
+        tokens = self.tokenizer.decode(ids, skip_special_tokens=False)
+        app_logger.info(f"tokens: {tokens}")
+
+        app_logger.info(f"Codes: {len(codes)}")
+        app_logger.info(f"Final Ids: {len(ids)}")
+
+        return ids
+
+        # return self.tokenizer.apply_chat_template(msg, add_generation_prompt=True)
 
     def _apply_chat_template(self, ref_codes: np.ndarray | list, ref_text: str, input_text: str) -> list[int]:
         """
