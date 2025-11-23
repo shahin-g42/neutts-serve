@@ -358,7 +358,8 @@ class NeuTTSAirWrapper:
         if isinstance(ref_codes, np.ndarray):
             ref_codes = ref_codes.tolist()
 
-        if not settings.use_template_v2:
+        if settings.use_template_v2:
+            app_logger.info("Using template v2")
             return self._apply_chat_template_v2(ref_codes, ref_text, input_text)
 
         # Phonemize texts
