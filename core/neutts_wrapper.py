@@ -312,7 +312,7 @@ class NeuTTSAirWrapper:
         input_text = "<|TEXT_PROMPT_START|>" + ref_text + " " + input_text + "<|TEXT_PROMPT_END|>"
         app_logger.info(f"Input text: {input_text}")
         # Tokenize input text
-        input_ids = self.tokenizer.encode(input_text, add_special_tokens=False)
+        input_ids = self.tokenizer.encode(input_text, add_special_tokens=True)
         app_logger.info(f"Input ids: {len(input_ids)}")
 
         msg = [
@@ -337,13 +337,14 @@ class NeuTTSAirWrapper:
         )
 
         app_logger.info(f"ids: {len(ids)}")
-        tokens = self.tokenizer.decode(ids, skip_special_tokens=False)
-        app_logger.info(f"tokens: {tokens}")
 
         codes_str = "".join([f"<|speech_{i}|>" for i in ref_codes])
         codes = self.tokenizer.encode(codes_str, add_special_tokens=False)
 
         ids = ids + codes
+
+        tokens = self.tokenizer.decode(ids, skip_special_tokens=False)
+        app_logger.info(f"tokens: {tokens}")
 
         app_logger.info(f"Codes: {len(codes)}")
         app_logger.info(f"Final Ids: {len(ids)}")
