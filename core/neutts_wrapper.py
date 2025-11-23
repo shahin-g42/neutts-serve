@@ -334,13 +334,18 @@ class NeuTTSAirWrapper:
                 + [speech_gen_start]
         )
 
+
+        app_logger.info(f"ids: {len(ids)}")
+        tokens = self.tokenizer.ids_to_tokens(ids)
+        app_logger.info(f"tokens: {len(tokens)}")
+
         codes_str = "".join([f"<|speech_{i}|>" for i in ref_codes])
         codes = self.tokenizer.encode(codes_str, add_special_tokens=False)
 
         ids = ids + codes
 
-        app_logger.info(f"Codes: {codes}")
-        app_logger.info(f"Final Ids: {ids}")
+        app_logger.info(f"Codes: {len(codes)}")
+        app_logger.info(f"Final Ids: {len(ids)}")
 
         return ids
 
