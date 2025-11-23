@@ -326,7 +326,7 @@ class NeuTTSAirWrapper:
             }
         ]
 
-        input_tokens = self.tokenizer.apply_chat_template(msg)
+        input_tokens = self.tokenizer.apply_chat_template(msg, add_generation_prompt=True)
         app_logger.info(f"Input tokens: {input_tokens}")
 
         text_prompt_start = self.tokenizer.convert_tokens_to_ids("<|TEXT_PROMPT_START|>")
