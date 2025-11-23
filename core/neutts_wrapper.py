@@ -338,6 +338,9 @@ class NeuTTSAirWrapper:
 
         ids = ids + codes
 
+        app_logger.info(f"Codes: {len(ids)}")
+        app_logger.info(f"Final Ids: {len(ids)}")
+
         return ids
 
     def _apply_chat_template(self, ref_codes: np.ndarray | list, ref_text: str, input_text: str) -> list[int]:
