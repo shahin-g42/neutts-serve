@@ -166,7 +166,19 @@ class NeuTTSAirWrapper:
         # vLLM loading (AsyncLLMEngine or standard LLM)
         elif self._use_vllm:
             import vllm
+            import os
             from vllm.engine.arg_utils import AsyncEngineArgs
+
+            # Determine chat template path for template_v2
+            # ONLY apply custom template when use_template_v2=True
+            chat_template_path = None
+            if settings.use_template_v2:
+                chat_template_path = os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "chat_template_v2.jinja"
+                )
+                app_logger.info(f"Using custom chat template for template_v2: {chat_template_path}")
 
             if self._use_async_engine:
                 # Use AsyncLLMEngine for streaming
@@ -176,6 +188,7 @@ class NeuTTSAirWrapper:
                     gpu_memory_utilization=gpu_memory_utilization,
                     max_model_len=self.max_context,
                     enforce_eager=False,  # Enable CUDA graphs
+                    chat_template=chat_template_path,  # Custom template for template_v2
                 )
                 self.backbone = vllm.AsyncLLMEngine.from_engine_args(engine_args)
                 app_logger.info("✓ vLLM AsyncLLMEngine loaded")
@@ -187,6 +200,7 @@ class NeuTTSAirWrapper:
                     seed=settings.seed,
                     gpu_memory_utilization=gpu_memory_utilization,
                     max_model_len=self.max_context,
+                    chat_template=chat_template_path,  # Custom template for template_v2
                 )
                 app_logger.info("✓ vLLM.LLM loaded")
 
